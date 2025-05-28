@@ -20,7 +20,7 @@
 
         {{-- Quadro Kanban --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach (['a_fazer' => 'A Fazer', 'fazendo' => 'Fazendo', 'finalizada' => 'Finalizadas (Hoje)'] as $status => $label)
+            @foreach (['a_fazer' => 'A Fazer', 'fazendo' => 'Fazendo', 'finalizada' => 'Finalizadas'] as $status => $label)
                 <div class="bg-white shadow rounded p-4">
                     <h3 class="font-bold text-lg mb-4">{{ $label }}</h3>
 
