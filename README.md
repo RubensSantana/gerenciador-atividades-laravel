@@ -35,7 +35,7 @@ Este é um projeto web desenvolvido em Laravel como trabalho final da disciplina
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/gerenciador-atividades-laravel.git
+git clone https://github.com/RubensSantana/gerenciador-atividades-laravel.git
 cd gerenciador-atividades-laravel
 ```
 
