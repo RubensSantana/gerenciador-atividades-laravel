@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -24,15 +24,29 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $request->validate([
+            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÀ-ú\s]+$/'],
+            'email' => ['required', 'string', 'email:dns', 'max:255', 'unique:users,email,' . $user->id],
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.regex' => 'O nome deve conter apenas letras.',
+            'name.max' => 'O nome não pode ter mais de 100 caracteres.',
+
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Informe um e-mail válido com domínio real.',
+            'email.unique' => 'Este e-mail já está em uso por outro usuário.',
+        ]);
+
+        if ($request->email !== $user->email) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->fill($request->only(['name', 'email']));
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -40,13 +54,19 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $request->validate([
+            'password' => ['required', Rules\Password::defaults()],
         ]);
 
         $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors([
+                'password' => 'A senha informada está incorreta.',
+            ]);
+        }
 
         Auth::logout();
 

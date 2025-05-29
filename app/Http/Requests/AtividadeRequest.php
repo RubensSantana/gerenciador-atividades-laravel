@@ -8,23 +8,21 @@ class AtividadeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Já usamos middleware auth nas rotas
         return true;
     }
 
     public function rules(): array
     {
-        $status = $this->input('status');
+        $today = now()->toDateString();
+        $maxDate = now()->addMonths(12)->toDateString();
 
         return [
-            'titulo' => 'required|string|max:255',
-            'descricao' => 'required|string',
-            'urgencia' => 'required|in:sob_controle,merece_atencao,urgente',
-            'status' => 'required|in:a_fazer,fazendo,finalizada',
-            'inicio' => 'required|date',
-            'fim' => $status !== 'finalizada'
-                ? 'required|date|after_or_equal:inicio'
-                : 'nullable',
+            'titulo' => ['required', 'string', 'max:100', 'regex:/^[A-Za-zÀ-ú\s]+$/'],
+            'descricao' => ['required', 'string', 'max:1000'],
+            'urgencia' => ['required', 'in:sob_controle,merece_atencao,urgente'],
+            'status' => ['nullable', 'in:a_fazer,fazendo,finalizada'],
+            'inicio' => ['required', 'date', 'after_or_equal:today', 'before_or_equal:' . $maxDate],
+            'fim' => ['nullable', 'date', 'after_or_equal:inicio', 'before_or_equal:' . $maxDate],
         ];
     }
 
@@ -32,16 +30,23 @@ class AtividadeRequest extends FormRequest
     {
         return [
             'titulo.required' => 'O título é obrigatório.',
+            'titulo.regex' => 'O título deve conter apenas letras e espaços.',
+            'titulo.max' => 'O título não pode ter mais de 100 caracteres.',
+
             'descricao.required' => 'A descrição é obrigatória.',
+            'descricao.max' => 'A descrição não pode ultrapassar 1000 caracteres.',
+
             'urgencia.required' => 'Selecione o nível de urgência.',
             'urgencia.in' => 'Urgência inválida.',
-            'status.required' => 'Selecione o status da atividade.',
+
             'status.in' => 'Status inválido.',
-            'inicio.required' => 'A data de início é obrigatória.',
-            'inicio.date' => 'A data de início deve ser uma data válida.',
-            'fim.required' => 'A data de fim é obrigatória para atividades não finalizadas.',
-            'fim.date' => 'A data de fim deve ser uma data válida.',
+
+            'inicio.required' => 'A data e hora de início são obrigatórias.',
+            'inicio.after_or_equal' => 'A data de início não pode ser anterior a hoje.',
+            'inicio.before_or_equal' => 'A data de início deve estar dentro dos próximos 12 meses.',
+
             'fim.after_or_equal' => 'A data de término deve ser posterior ou igual à data de início.',
+            'fim.before_or_equal' => 'A data de término deve estar dentro dos próximos 12 meses.',
         ];
     }
 }
